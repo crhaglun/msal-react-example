@@ -1,12 +1,11 @@
-import React, { ReactHTML } from 'react';
+import React from 'react';
 import './App.css';
-import * as Msal from 'msal'
-import { Shimmer } from 'office-ui-fabric-react/lib/Shimmer';
+import { AuthError, AuthResponse, UserAgentApplication } from 'msal'
+import { Shimmer } from 'office-ui-fabric-react';
 import { Profile } from './Profile';
 import { UnreadMailCount } from './UnreadMailCount';
-import { MarkEmailAsRead } from './MarkEmailAsRead';
 
-function authCallback(authErr: Msal.AuthError, response?: Msal.AuthResponse) {
+function authCallback(authErr: AuthError, response?: AuthResponse) {
     console.log(authErr);
     console.log(response);
 }
@@ -22,10 +21,10 @@ async function loginAsync(setToken: React.Dispatch<any>) {
     }
 
     const request = {
-        scopes: ["https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/Mail.Read"]
+        scopes: ["https://graph.microsoft.com/User.Read"]
     }
 
-    const msalInstance = new Msal.UserAgentApplication(msalConfig);
+    const msalInstance = new UserAgentApplication(msalConfig);
     msalInstance.handleRedirectCallback(authCallback)
 
     try {
@@ -65,7 +64,6 @@ const App: React.FC = () => {
             <>
                 <Profile headers={ headers } />
                 <UnreadMailCount headers={ headers } />
-                <MarkEmailAsRead headers={ headers } />
             </>
         )
 

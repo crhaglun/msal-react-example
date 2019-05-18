@@ -1,5 +1,5 @@
 import React from 'react'
-import { Shimmer, ShimmerElementType } from 'office-ui-fabric-react/lib/Shimmer';
+import { Shimmer } from 'office-ui-fabric-react';
 
 interface Properties {
     headers: Headers
@@ -12,14 +12,13 @@ async function getUnreadMailCountAsync(headers: Headers, setCount: React.Dispatc
         headers: headers
     };
 
-    // var graphEndpoint = "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages?$count=true&$select=id&$filter=isRead eq false";
-    var query = "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages/$count?$filter=isRead eq false"
+    var graphQuery = "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages/$count?$filter=isRead eq false"
 
-    const response = await fetch(query, options);
+    const response = await fetch(graphQuery, options);
 
-    if (response.status == 200) {
+    if (response.status === 200) {
         const unreadMail = await response.json();
-        setCount(unreadMail['@odata.count'])
+        setCount(unreadMail)
     }
     else {
         setCount(null);

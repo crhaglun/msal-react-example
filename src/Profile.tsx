@@ -1,5 +1,5 @@
 import React from 'react'
-import { Shimmer, ShimmerElementType } from 'office-ui-fabric-react/lib/Shimmer';
+import { Shimmer, ShimmerElementType } from 'office-ui-fabric-react';
 
 interface Properties {
     headers: Headers

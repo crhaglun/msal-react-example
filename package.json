@@ -1,14 +1,12 @@
 {
-  "name": "auth-test",
+  "name": "msal-react-example",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/adal": "^1.0.29",
     "@types/jest": "24.0.13",
     "@types/node": "12.0.2",
     "@types/react": "16.8.17",
     "@types/react-dom": "16.8.4",
-    "adal-node": "^0.1.28",
     "msal": "^1.0.0",
     "office-ui-fabric-react": "^6.182.1",
     "react": "^16.8.6",
