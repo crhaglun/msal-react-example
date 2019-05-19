@@ -2,35 +2,34 @@ import React from 'react'
 import { Shimmer, ShimmerElementType } from 'office-ui-fabric-react';
 
 interface Properties {
-    headers: Headers
+    scopedQuery: (scope: string, query: string) => Promise<Response | undefined> 
 }
 
-async function getProfileAsync(headers: Headers, setProfile: React.Dispatch<any>) {
+async function getProfileAsync(scopedQuery: (scope: string, query: string) => Promise<Response | undefined>, setProfile: React.Dispatch<any>) {
+    const graphQuery = "https://graph.microsoft.com/v1.0/me";
+    const scope = "https://graph.microsoft.com/User.Read"
 
-    var options = {
-        method: "GET",
-        headers: headers
-    };
+    const response = await scopedQuery(scope, graphQuery);
 
-    var graphEndpoint = "https://graph.microsoft.com/v1.0/me";
-
-    const response = await fetch(graphEndpoint, options);
-    const me = await response.json();
-
-    setProfile(me)
+    if (response)
+    {
+        const me = await response.json();
+        setProfile(me)
+    }
 }
 
-export const Profile: React.FC<Properties> = ({ headers }: Properties) => {
+export const Profile: React.FC<Properties> = ( { scopedQuery } : Properties) => {
 
     const [profile, setProfile] = React.useState();
 
-    if (headers) {
-        getProfileAsync(headers, setProfile)
-    }
-
     if (profile) {
-        return (<h1>Signed in as { profile.displayName }</h1>)
+        return (
+        <>
+            <h1>Signed in as { profile.displayName }</h1>
+        </>)
     } else {
+        getProfileAsync(scopedQuery, setProfile)
+
         return (
             <Shimmer width="50%"
                 shimmerElements={

@@ -2,21 +2,16 @@ import React from 'react'
 import { Shimmer } from 'office-ui-fabric-react';
 
 interface Properties {
-    headers: Headers
+    scopedQuery: (scope: string, query: string) => Promise<Response | undefined> 
 }
 
-async function getUnreadMailCountAsync(headers: Headers, setCount: React.Dispatch<any>) {
+async function getUnreadMailCountAsync(scopedQuery: (scope: string, query: string) => Promise<Response | undefined>, setCount: React.Dispatch<any>) {
+    const graphQuery = "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages/$count?$filter=isRead eq false";
+    const scope = "https://graph.microsoft.com/Mail.Read"
 
-    var options = {
-        method: "GET",
-        headers: headers
-    };
+    const response = await scopedQuery(scope, graphQuery);
 
-    var graphQuery = "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages/$count?$filter=isRead eq false"
-
-    const response = await fetch(graphQuery, options);
-
-    if (response.status === 200) {
+    if (response && response.status === 200) {
         const unreadMail = await response.json();
         setCount(unreadMail)
     }
@@ -25,19 +20,18 @@ async function getUnreadMailCountAsync(headers: Headers, setCount: React.Dispatc
     }
 }
 
-export const UnreadMailCount: React.FC<Properties> = ({ headers }: Properties) => {
+export const UnreadMailCount: React.FC<Properties> = ({ scopedQuery }: Properties) => {
 
     const [count, setCount] = React.useState();
 
-    if (headers && count === undefined) {
-        getUnreadMailCountAsync(headers, setCount)
+    if (count === undefined) {
+        getUnreadMailCountAsync(scopedQuery, setCount)
 
         return (
             <Shimmer width="50%" />
         );
     }
-
-    if (count > 0) {
+    else if (count > 0) {
         return (<h2>You have { count } unread mail :-(</h2>)
     } else if (count === 0) {
         return (<h2>You have no unread mail! :-)</h2>)
