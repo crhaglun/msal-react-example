@@ -2,13 +2,9 @@ import React from 'react';
 import './App.css';
 import { AuthError, AuthResponse, UserAgentApplication } from 'msal'
 import { Profile } from './Profile';
+import { ConsentControl } from './ConsentControl'
 import { UnreadMailCount } from './UnreadMailCount';
-import { PrimaryButton, Link } from 'office-ui-fabric-react';
-
-function authCallback(authErr: AuthError, response?: AuthResponse) {
-    console.log(authErr);
-    console.log(response);
-}
+import { Link } from 'office-ui-fabric-react';
 
 const App: React.FC = () => {
 
@@ -20,35 +16,24 @@ const App: React.FC = () => {
     }
 
     const msalInstance = new UserAgentApplication(msalConfig);
-    msalInstance.handleRedirectCallback(authCallback)
 
-    const getAccessToken = async (scope: string) => {
+    const redirectCallback = (authErr: AuthError, response?: AuthResponse) => {
+        console.log(authErr);
+        console.log(response);
+    }
+
+    msalInstance.handleRedirectCallback(redirectCallback)
+
+    const getAccessToken = (scope: string) => {
         const request = {
             scopes: [scope]
         }
-
-        try {
-            return await msalInstance.acquireTokenSilent(request);
-        }
-        catch (err) {
-            console.log(err)
-
-            if (err.errorCode === "login_required" || err.errorCode === "token_renewal_error") {
-                await msalInstance.loginRedirect(request);
-            } else if (err.errorCode === "consent_required") {
-                try {
-                    await msalInstance.acquireTokenRedirect(request);
-                } catch (err2) {
-                    await msalInstance.loginRedirect(request);
-                }
-            }
-        }
+        return msalInstance.acquireTokenSilent(request)
     }
 
-    const scopedQuery = async (scope: string, query: string) => {
-        const accessTokenResponse = await getAccessToken(scope);
-
-        if (accessTokenResponse) {
+    const fetchWithScope = async (scope: string, query: string) => {
+        try {
+            const accessTokenResponse = await getAccessToken(scope);
             const token = accessTokenResponse.accessToken;
 
             const headers = new Headers({ "Authorization": "Bearer " + token });
@@ -60,12 +45,43 @@ const App: React.FC = () => {
 
             return await fetch(query, options);
         }
+        catch (err) {
+            console.log(err)
+        }
+    }
+
+    const requestAccessToken = async (scope: string) => {
+        const request = {
+            scopes: [scope]
+        }
+
+        try {
+            msalInstance.acquireTokenRedirect(request);
+        } catch (err) {
+            if (err.errorCode === "user_login_error") {
+                msalInstance.loginRedirect(request);
+            } else {
+                throw err
+            }
+        }
     }
 
     return (
         <>
-            <Profile scopedQuery={scopedQuery} />
-            <UnreadMailCount scopedQuery={scopedQuery} />
+            <ConsentControl
+                getAccessToken={getAccessToken}
+                requestAccessToken={requestAccessToken}
+                description="Read user profile"
+                scope="https://graph.microsoft.com/User.Read" />
+            <ConsentControl
+                getAccessToken={getAccessToken}
+                requestAccessToken={requestAccessToken}
+                description="Read mail"
+                scope="https://graph.microsoft.com/Mail.Read" />
+
+            <Profile fetchWithScope={fetchWithScope} />
+            <UnreadMailCount fetchWithScope={fetchWithScope} />
+
             <Link onClick={() => msalInstance.logout()}>Sign out</Link>
         </>
     )
