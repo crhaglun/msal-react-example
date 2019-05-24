@@ -1,88 +1,49 @@
 import React from 'react';
 import './App.css';
-import { AuthError, AuthResponse, UserAgentApplication } from 'msal'
 import { Profile } from './Profile';
 import { ConsentControl } from './ConsentControl'
 import { UnreadMailCount } from './UnreadMailCount';
 import { Link } from 'office-ui-fabric-react';
+import { createUserAgentApplication } from './MsalInstance';
+import { useAuthenticationState } from './useAuthenticationStateHook';
 
 const App: React.FC = () => {
 
-    const msalConfig = {
-        auth: {
-            clientId: /* client ID goes here */,
-            authority: "https://login.microsoftonline.com/common",
-        }
-    }
+    const userAgentApplication = createUserAgentApplication()
 
-    const msalInstance = new UserAgentApplication(msalConfig);
+    const userAuth = useAuthenticationState(
+        userAgentApplication,
+        "Read user profile",
+        ["https://graph.microsoft.com/User.Read"])
 
-    const redirectCallback = (authErr: AuthError, response?: AuthResponse) => {
-        console.log(authErr);
-        console.log(response);
-    }
+    const mailAuth = useAuthenticationState(
+        userAgentApplication,
+        "Read mail",
+        ["https://graph.microsoft.com/Mail.Read"])
 
-    msalInstance.handleRedirectCallback(redirectCallback)
-
-    const getAccessToken = (scope: string) => {
-        const request = {
-            scopes: [scope]
-        }
-        return msalInstance.acquireTokenSilent(request)
-    }
-
-    const fetchWithScope = async (scope: string, query: string) => {
-        try {
-            const accessTokenResponse = await getAccessToken(scope);
-            const token = accessTokenResponse.accessToken;
-
-            const headers = new Headers({ "Authorization": "Bearer " + token });
-
-            const options = {
-                method: "GET",
-                headers: headers
-            };
-
-            return await fetch(query, options);
-        }
-        catch (err) {
-            console.log(err)
-        }
-    }
-
-    const requestAccessToken = async (scope: string) => {
-        const request = {
-            scopes: [scope]
-        }
-
-        try {
-            msalInstance.acquireTokenRedirect(request);
-        } catch (err) {
-            if (err.errorCode === "user_login_error") {
-                msalInstance.loginRedirect(request);
-            } else {
-                throw err
-            }
-        }
-    }
+    const combinedAuth = useAuthenticationState(
+        userAgentApplication,
+        "Read user profile + mail",
+        ["https://graph.microsoft.com/User.Read", "https://graph.microsoft.com/Mail.Read"])
 
     return (
         <>
             <ConsentControl
-                getAccessToken={getAccessToken}
-                requestAccessToken={requestAccessToken}
-                description="Read user profile"
-                scope="https://graph.microsoft.com/User.Read" />
+                accessToken={userAuth.authResponse}
+                requestAccessToken={userAuth.requestAccessToken}
+                description={userAuth.description} />
             <ConsentControl
-                getAccessToken={getAccessToken}
-                requestAccessToken={requestAccessToken}
-                description="Read mail"
-                scope="https://graph.microsoft.com/Mail.Read" />
-
-            <Profile fetchWithScope={fetchWithScope} />
-            <UnreadMailCount fetchWithScope={fetchWithScope} />
-
-            <Link onClick={() => msalInstance.logout()}>Sign out</Link>
+                accessToken={mailAuth.authResponse}
+                requestAccessToken={mailAuth.requestAccessToken}
+                description={mailAuth.description} />
+            <ConsentControl
+                accessToken={combinedAuth.authResponse}
+                requestAccessToken={combinedAuth.requestAccessToken}
+                description={combinedAuth.description} />
+            <br />
+            <Profile authenticationHeaders={userAuth.authHeaders} />
+            <UnreadMailCount authenticationHeaders={mailAuth.authHeaders} />
+            <Link onClick={() => userAgentApplication.logout()}>Sign out</Link>
         </>
     )
 }

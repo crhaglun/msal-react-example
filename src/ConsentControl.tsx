@@ -1,55 +1,55 @@
 import React from 'react'
-import { AuthResponse } from 'msal'
+import { AuthResponse, AuthError } from 'msal'
 import { Link, Label } from 'office-ui-fabric-react';
 
 interface Properties {
-    getAccessToken: (scope: string) => Promise<AuthResponse>,
-    requestAccessToken: (scope: string) => void,
+    accessToken?: AuthResponse | AuthError,
+    requestAccessToken: () => void,
     description: string
-    scope: string
 }
 
-export const ConsentControl: React.FC<Properties> = ({ getAccessToken, requestAccessToken, description, scope }: Properties) => {
+export const ConsentControl: React.FC<Properties> = ({ accessToken, requestAccessToken, description }: Properties) => {
 
-    const [status, setStatus] = React.useState();
+    var statusText: string;
+    var linkText: string | undefined;
 
-    const getScopeStatus = async () => {
-        try {
-            await getAccessToken(scope);
-            setStatus("OK")
-        }
-        catch (err) {
-            setStatus(err.errorCode)
+    if (!accessToken) {
+        statusText = "checking..."
+    }
+    else if (accessToken instanceof AuthError) {
+        statusText = accessToken.errorCode
+
+        switch (accessToken.errorCode) {
+            case "token_renewal_error":
+            case "login_required":
+                linkText = "Sign in"
+                break;
+
+            case "consent_required":
+                linkText = "Get consent"
+                break;
+
+            default:
+                linkText = "Force sign-in"
         }
     }
-
-    const getConsent = async () => {
-        try {
-            await requestAccessToken(scope)
-        }
-        catch (err) {
-            setStatus(err.errorCode)
-        }
+    else {
+        statusText = "OK"
     }
 
-    if (status === "OK") {
+    if (linkText) {
         return (
             <>
-                <Label>{description} : {status}</Label>
+                <Label>{description} : {statusText}</Label>
+                <Link onClick={() => requestAccessToken()}>{linkText}</Link>
             </>
         )
     }
-    else if (status) {
+    else {
         return (
             <>
-                <Label>{description} : {status}</Label>
-                <Link onClick={() => getConsent()}>Get consent</Link>
+                <Label>{description} : {statusText}</Label>
             </>
-        )
-    } else {
-        getScopeStatus()
-        return (
-            <Label>{description} : checking...</Label>
         )
     }
 }
