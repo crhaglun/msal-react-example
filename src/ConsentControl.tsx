@@ -21,6 +21,9 @@ export const ConsentControl: React.FC<Properties> = ({ accessToken, requestAcces
 
         switch (accessToken.errorCode) {
             case "token_renewal_error":
+                linkText = 'Renew access token'
+                break;
+
             case "login_required":
                 linkText = "Sign in"
                 break;

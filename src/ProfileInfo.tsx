@@ -1,11 +1,11 @@
 import React from 'react'
-import { Shimmer, ShimmerElementType } from 'office-ui-fabric-react';
+import { Shimmer } from 'office-ui-fabric-react';
 
 interface Properties {
     authenticationHeaders?: Headers
 }
 
-export const Profile: React.FC<Properties> = ({ authenticationHeaders }: Properties) => {
+export const ProfileInfo: React.FC<Properties> = ({ authenticationHeaders }: Properties) => {
 
     const [profile, setProfile] = React.useState();
 
@@ -27,18 +27,11 @@ export const Profile: React.FC<Properties> = ({ authenticationHeaders }: Propert
     if (profile) {
         return (
             <>
-                <h1>Hello {profile.displayName}</h1>
+                <h1>Hello {profile.displayName} ({profile.userPrincipalName})</h1>
             </>)
     } else if (authenticationHeaders) {
         return (
-            <Shimmer width="50%"
-                shimmerElements={
-                    [
-                        { type: ShimmerElementType.circle },
-                        { type: ShimmerElementType.gap, width: '2%' },
-                        { type: ShimmerElementType.line }
-                    ]}
-            />
+            <Shimmer width="50%" />
         );
     } else {
         return <></>

@@ -51,7 +51,7 @@ export function useAuthenticationState(userAgentApplication: UserAgentApplicatio
 
             initializeAuthResponse()
         }
-    }, [authState])
+    }, [authState, request, userAgentApplication])
 
 
     return authState;

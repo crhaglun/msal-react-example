@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { Profile } from './Profile';
+import { ProfileInfo } from './ProfileInfo';
 import { ConsentControl } from './ConsentControl'
 import { UnreadMailCount } from './UnreadMailCount';
 import { Link } from 'office-ui-fabric-react';
@@ -41,7 +41,7 @@ const App: React.FC = () => {
                 requestAccessToken={combinedAuth.requestAccessToken}
                 description={combinedAuth.description} />
             <br />
-            <Profile authenticationHeaders={userAuth.authHeaders} />
+            <ProfileInfo authenticationHeaders={userAuth.authHeaders} />
             <UnreadMailCount authenticationHeaders={mailAuth.authHeaders} />
             <Link onClick={() => userAgentApplication.logout()}>Sign out</Link>
         </>
